@@ -1,0 +1,54 @@
+name: Build Sansheng App
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.6'
+          channel: 'stable'
+          cache: true
+
+      - name: Generate Android project
+        run: |
+          rm -rf android
+          mkdir -p assets
+          mv pubspec.yaml pubspec.yaml.bak
+          mv lib lib.bak
+          flutter create --platforms android --org com.babytracker sansheng_temp
+          mv sansheng_temp/android .
+          rm -rf sansheng_temp
+          mv lib.bak lib
+          mv pubspec.yaml.bak pubspec.yaml
+          rm -f pubspec.lock
+
+      - run: flutter pub get
+
+      - run: flutter build apk --debug
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sansheng-app-debug
+          path: build/app/outputs/flutter-apk/app-debug.apk
+
+      - uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main'
+        with:
+          files: build/app/outputs/flutter-apk/app-debug.apk
+          tag_name: latest
+          name: 三省六部 App v1.0.0
+          body: "三省六部多Agent管理App — 自动构建版本"
+          overwrite: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
