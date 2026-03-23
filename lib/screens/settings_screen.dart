@@ -169,53 +169,257 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showModelPicker(String agentId, String agentName, String currentModel) {
-    final models = [
-      'infini-coding/glm-5',
-      'infini-coding/glm-4.7',
-      'infini-coding/deepseek-v3.2',
-      'infini-coding/deepseek-v3.2-thinking',
-      'infini-coding/minimax-m2.7',
-      'infini-coding/minimax-m2.5',
-      'infini-coding/kimi-k2.5',
-    ];
-
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('切换 ${agentName} 模型', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            ...models.map((m) => ListTile(
-              leading: Radio<String>(
-                value: m,
-                groupValue: currentModel,
-                onChanged: (v) {
-                  Navigator.pop(ctx);
-                  if (v != null) {
-                    context.read<ApiService>().setModel(agentId, v);
-                  }
-                },
-              ),
-              title: Text(m.split('/').last),
-              subtitle: Text(m),
-              onTap: () {
-                Navigator.pop(ctx);
-                context.read<ApiService>().setModel(agentId, m);
-              },
-            )),
-          ],
-        ),
+      builder: (ctx) => ModelPickerSheet(
+        agentId: agentId,
+        agentName: agentName,
+        currentModel: currentModel,
+        onChanged: () {
+          // Refresh the parent state
+          context.read<ApiService>().fetchAll();
+        },
       ),
     );
   }
 
   String _fmtTime(DateTime t) =>
       '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}:${t.second.toString().padLeft(2, '0')}';
+}
+
+/// 模型选择器弹窗（支持滚动 + 自由输入）
+class ModelPickerSheet extends StatefulWidget {
+  final String agentId;
+  final String agentName;
+  final String currentModel;
+  final VoidCallback onChanged;
+
+  const ModelPickerSheet({
+    super.key,
+    required this.agentId,
+    required this.agentName,
+    required this.currentModel,
+    required this.onChanged,
+  });
+
+  @override
+  State<ModelPickerSheet> createState() => _ModelPickerSheetState();
+}
+
+class _ModelPickerSheetState extends State<ModelPickerSheet> {
+  late TextEditingController _controller;
+  bool _isCustomMode = false;
+  bool _isLoading = false;
+  String? _error;
+
+  // 示例模型列表
+  static const _exampleModels = [
+    'infini-coding/glm-5',
+    'infini-coding/glm-4.7',
+    'infini-coding/deepseek-v3.2',
+    'infini-coding/deepseek-v3.2-thinking',
+    'infini-coding/minimax-m2.5',
+    'infini-coding/minimax-m2.7',
+    'infini-coding/kimi-k2.5',
+    'infini-coding/minimax-m2.1',
+    'minimax-portal/MiniMax-M2.5',
+    'minimax-portal/MiniMax-M2.5-highspeed',
+    'minimax-portal/MiniMax-M2.5-Lightning',
+    'minimax/MiniMax-M2.5',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.currentModel);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _applyModel(String model) async {
+    if (model.trim().isEmpty) return;
+    setState(() { _isLoading = true; _error = null; });
+
+    try {
+      final api = context.read<ApiService>();
+      await api.setModel(widget.agentId, model.trim());
+      widget.onChanged();
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      setState(() { _isLoading = false; _error = '切换失败: $e'; });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 20,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 标题行
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '切换 ${widget.agentName} 模型',
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ),
+              TextButton.icon(
+                onPressed: () => setState(() => _isCustomMode = !_isCustomMode),
+                icon: Icon(_isCustomMode ? Icons.list : Icons.edit, size: 16),
+                label: Text(_isCustomMode ? '快捷选择' : '自由输入'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          if (_isCustomMode) ...[
+            // 自由输入模式
+            TextField(
+              controller: _controller,
+              decoration: const InputDecoration(
+                labelText: '模型名称',
+                hintText: '例如: infini-coding/glm-5',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.edit),
+              ),
+              onSubmitted: _applyModel,
+            ),
+            const SizedBox(height: 12),
+
+            // 示例模型（可点击填入）
+            const Text('示例模型（点击填入）:', style: TextStyle(fontSize: 12, color: Colors.grey)),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 36,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: _exampleModels.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 6),
+                itemBuilder: (ctx, i) {
+                  final m = _exampleModels[i];
+                  final short = m.split('/').last;
+                  return ActionChip(
+                    label: Text(short, style: const TextStyle(fontSize: 12)),
+                    backgroundColor: m == widget.currentModel
+                        ? Colors.amber.shade100
+                        : Colors.grey.shade100,
+                    onPressed: () {
+                      _controller.text = m;
+                      _applyModel(m);
+                    },
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // 完整列表（竖向滚动）
+            const Text('完整列表（竖向滚动）:', style: TextStyle(fontSize: 12, color: Colors.grey)),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 180,
+              child: ListView.separated(
+                itemCount: _exampleModels.length,
+                separatorBuilder: (_, __) => const Divider(height: 1),
+                itemBuilder: (ctx, i) {
+                  final m = _exampleModels[i];
+                  final isSelected = m == widget.currentModel;
+                  return ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(m, style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      color: isSelected ? Colors.amber.shade700 : null,
+                    )),
+                    trailing: isSelected
+                        ? const Icon(Icons.check, color: Colors.amber, size: 18)
+                        : const Icon(Icons.chevron_right, size: 18),
+                    onTap: () => _applyModel(m),
+                  );
+                },
+              ),
+            ),
+          ] else ...[
+            // 快捷选择模式（竖向滚动列表）
+            const Text('点击选择一个模型:', style: TextStyle(fontSize: 12, color: Colors.grey)),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 300,
+              child: ListView.separated(
+                itemCount: _exampleModels.length,
+                separatorBuilder: (_, __) => const Divider(height: 1),
+                itemBuilder: (ctx, i) {
+                  final m = _exampleModels[i];
+                  final isSelected = m == widget.currentModel;
+                  return ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                    leading: Icon(
+                      isSelected ? Icons.radio_button_checked : Icons.radio_button_off,
+                      color: isSelected ? Colors.amber : Colors.grey,
+                      size: 20,
+                    ),
+                    title: Text(
+                      m.split('/').last,
+                      style: TextStyle(
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        color: isSelected ? Colors.amber.shade700 : null,
+                      ),
+                    ),
+                    subtitle: Text(m, style: const TextStyle(fontSize: 11)),
+                    onTap: () => _applyModel(m),
+                  );
+                },
+              ),
+            ),
+          ],
+
+          if (_error != null) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(_error!, style: TextStyle(fontSize: 12, color: Colors.red.shade700)),
+            ),
+          ],
+
+          if (_isLoading) ...[
+            const SizedBox(height: 12),
+            const Center(child: CircularProgressIndicator()),
+          ],
+
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _isLoading
+                  ? null
+                  : () => _applyModel(_controller.text),
+              child: const Text('确认切换'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
