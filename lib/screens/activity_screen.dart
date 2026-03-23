@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../service.dart';
+import '../services/api_service.dart';
 import '../models/models.dart';
 
 class ActivityScreen extends StatelessWidget {
@@ -86,7 +86,7 @@ class ActivityScreen extends StatelessWidget {
                           dense: true,
                           leading: CircleAvatar(
                             radius: 16,
-                            backgroundColor: e.color.withValues(alpha: 0.1),
+                            backgroundColor: e.color.withOpacity(0.1),
                             child: Icon(e.icon, color: e.color, size: 18),
                           ),
                           title: Text(e.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14)),

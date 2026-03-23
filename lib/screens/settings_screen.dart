@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../service.dart';
+import '../services/api_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -95,7 +95,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // 自动刷新
           Card(
             child: SwitchListTile(
-              leading: const Icon(Icons.auto_awesome),
+              secondary: const Icon(Icons.auto_awesome),
               title: const Text('自动刷新'),
               subtitle: const Text('每5分钟自动更新数据'),
               value: true,

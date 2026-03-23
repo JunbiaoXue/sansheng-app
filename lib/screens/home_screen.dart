@@ -144,14 +144,14 @@ class HomeScreen extends StatelessWidget {
         ...api.activeTasks.take(3).map((t) => Card(
           child: ListTile(
             leading: CircleAvatar(
-              backgroundColor: _stateColor(t.state).withValues(alpha: 0.15),
+              backgroundColor: _stateColor(t.state).withOpacity(0.15),
               child: Icon(_stateIcon(t.state), color: _stateColor(t.state), size: 20),
             ),
             title: Text(t.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14)),
             subtitle: Text('${t.org ?? ''} · ${t.now ?? ''}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12)),
             trailing: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(color: _stateColor(t.state).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(color: _stateColor(t.state).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
               child: Text(_stateLabel(t.state), style: TextStyle(fontSize: 11, color: _stateColor(t.state))),
             ),
           ),
@@ -217,7 +217,7 @@ class HomeScreen extends StatelessWidget {
                 _agentStatRow('模型', a.modelShort, Icons.smart_toy),
                 _agentStatRow('完成任务', '${a.tasksDone}', Icons.done),
                 _agentStatRow('参与任务', '${a.flowParticipations}', Icons.handshake),
-                _agentStatRow('最近活跃', a.formatTime(a.lastActive), Icons.access_time),
+                _agentStatRow('最近活跃', api.formatTime(a.lastActive), Icons.access_time),
               ],
             ),
           ),

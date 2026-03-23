@@ -86,7 +86,7 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: _stateColor(task.state).withValues(alpha: 0.1),
+                    color: _stateColor(task.state).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(task.id, style: TextStyle(fontSize: 11, color: _stateColor(task.state), fontWeight: FontWeight.bold)),
@@ -165,7 +165,7 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
             Row(children: [
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(color: _stateColor(task.state).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+                decoration: BoxDecoration(color: _stateColor(task.state).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
                 child: Text(task.state, style: TextStyle(color: _stateColor(task.state), fontWeight: FontWeight.bold)),
               ),
               const SizedBox(width: 8),
