@@ -33,7 +33,7 @@ class AnalyticsScreen extends StatelessWidget {
     final top5 = sorted.take(5).toList();
     if (top5.isEmpty || top5.every((a) => a.costCny == 0)) {
       return Card(child: Padding(padding: const EdgeInsets.all(24), child: Center(
-        child: Text('暂无费用数据', style: TextStyle(color: Colors.grey[400]))));
+        child: Text('暂无费用数据', style: TextStyle(color: Colors.grey[400])))));
     }
 
     return Card(
@@ -97,7 +97,7 @@ class AnalyticsScreen extends StatelessWidget {
     final data = sorted.where((a) => a.tokensTotal > 0).take(5).toList();
     if (data.isEmpty) {
       return Card(child: Padding(padding: const EdgeInsets.all(24), child: Center(
-        child: Text('暂无Token数据', style: TextStyle(color: Colors.grey[400]))));
+        child: Text('暂无Token数据', style: TextStyle(color: Colors.grey[400])))));
     }
 
     final colors = [Colors.blue, Colors.green, Colors.orange, Colors.purple, Colors.teal];

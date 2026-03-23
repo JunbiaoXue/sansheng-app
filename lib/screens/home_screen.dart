@@ -167,12 +167,12 @@ class HomeScreen extends StatelessWidget {
       children: [
         const Text('👥 Agent列表', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         const SizedBox(height: 8),
-        ...sorted.map((a) => _buildAgentCard(a)),
+        ...sorted.map((a) => _buildAgentCard(a, api)),
       ],
     );
   }
 
-  Widget _buildAgentCard(Agent a) {
+  Widget _buildAgentCard(Agent a, ApiService api) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ExpansionTile(
