@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import '../models/models.dart';
 
 class ApiService extends ChangeNotifier {
-  static const String _baseUrl = 'http://localhost:7891';
+  static const String _baseUrl = 'http://118.145.117.25:7891';
 
   List<Agent> _agents = [];
   List<Edict> _tasks = [];

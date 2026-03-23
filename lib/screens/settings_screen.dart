@@ -10,7 +10,7 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  String _serverUrl = 'http://localhost:7891';
+  String _serverUrl = 'http://118.145.117.25:7891';
   final _urlController = TextEditingController();
 
   @override
@@ -52,7 +52,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     decoration: const InputDecoration(
                       labelText: 'Dashboard 服务器地址',
                       border: OutlineInputBorder(),
-                      hintText: 'http://localhost:7891',
+                      hintText: 'http://118.145.117.25:7891',
                       prefixIcon: Icon(Icons.link),
                     ),
                     onSubmitted: (v) => setState(() => _serverUrl = v),
